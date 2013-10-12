@@ -1,9 +1,10 @@
 ExposeTranslationBundle
 =======================
 
-A pretty nice way to expose your translated messages to your JavaScript.
+[![Build
+Status](https://secure.travis-ci.org/willdurand/BazingaExposeTranslationBundle.png?branch=master)](https://travis-ci.org/willdurand/BazingaExposeTranslationBundle)
 
-**Warning:** The PHP code of this bundle is not unit tested, so don't use it or provides tests if you want to contribute.
+A pretty nice way to expose your translated messages to your JavaScript.
 
 
 ## Documentation

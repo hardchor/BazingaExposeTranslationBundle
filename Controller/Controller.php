@@ -2,33 +2,29 @@
 
 namespace Bazinga\ExposeTranslationBundle\Controller;
 
+use Bazinga\ExposeTranslationBundle\Finder\TranslationFinder;
 use Symfony\Component\Translation\TranslatorInterface;
 use Symfony\Component\Templating\EngineInterface;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpFoundation\Request;
-use Bazinga\ExposeTranslationBundle\Service\TranslationFinder;
 use Symfony\Component\Config\ConfigCache;
 use Symfony\Component\Config\Resource\FileResource;
 
 /**
- * Controller class.
- *
- * @package ExposeTranslationBundle
- * @subpackage Controller
  * @author William DURAND <william.durand1@gmail.com>
  */
 class Controller
 {
     /**
-     * @var \Symfony\Component\Translation\TranslatorInterface
+     * @var TranslatorInterface
      */
     protected $translator;
     /**
-     * @var \Symfony\Component\Templating\EngineInterface
+     * @var EngineInterface
      */
     protected $engine;
     /**
-     * @var \Bazinga\ExposeTranslationBundle\Service\TranslationFinder
+     * @var TranslationFinder
      */
     protected $translationFinder;
     /**
@@ -58,13 +54,13 @@ class Controller
     /**
      * Default constructor.
      *
-     * @param \Symfony\Component\Translation\TranslatorInterface $translator                The translator.
-     * @param \Symfony\Component\Templating\EngineInterface $engine                         The engine.
-     * @param \Bazinga\ExposeTranslationBundle\Service\TranslationFinder $translationFinder The translation finder.
-     * @param string $cacheDir
-     * @param boolean $debug
-     * @param string $localeFallback
-     * @param array $defaultDomains     An array of default domain names.
+     * @param TranslatorInterface $translator        The translator.
+     * @param EngineInterface     $engine            The engine.
+     * @param TranslationFinder   $translationFinder The translation finder.
+     * @param string              $cacheDir
+     * @param boolean             $debug
+     * @param string              $localeFallback
+     * @param array               $defaultDomains    An array of default domain names.
      */
     public function __construct(TranslatorInterface $translator, EngineInterface $engine,
                                 TranslationFinder $translationFinder, $cacheDir, $debug = false, $localeFallback = "", array $defaultDomains = array())
@@ -82,8 +78,8 @@ class Controller
     /**
      * Add a translation loader if it does not exist.
      *
-     * @param string $id    The loader id.
-     * @param \Symfony\Component\Translation\Loader\LoaderInterface $loader     A translation loader.
+     * @param string          $id     The loader id.
+     * @param LoaderInterface $loader A translation loader.
      */
     public function addLoader($id, $loader)
     {
@@ -100,13 +96,13 @@ class Controller
         $cache = new ConfigCache($this->cacheDir.'/'.$domain_name.'.'.$_locale.".".$_format, $this->debug);
 
         if (!$cache->isFresh()) {
-            $files = $this->translationFinder->getResources($domain_name, $_locale);
-            $files = iterator_to_array($files);
+            $locales = $this->translationFinder->createLocalesArray(array($this->localeFallback, $_locale));
+            $files = array();
 
-            if ($this->localeFallback && $_locale !== $this->localeFallback) {
-                $fallbackFiles = $this->translationFinder->getResources($domain_name, $this->localeFallback);
-                $fallbackFiles = iterator_to_array($fallbackFiles);
-                $files = array_merge($fallbackFiles, $files);
+            foreach ($locales as $locale) {
+                foreach ($this->translationFinder->getResources($domain_name, $locale) as $file) {
+                    $files[] = $file;
+                }
             }
 
             $resources = array();
@@ -141,6 +137,12 @@ class Controller
 
         $content = file_get_contents((string) $cache);
 
-        return new Response($content, 200, array('Content-Type' => $request->getMimeType($_format)));
+        $response = new Response($content);
+        $response->prepare($request);
+        $response->setPublic();
+        $response->setETag(md5($response->getContent()));
+        $response->isNotModified($request);
+
+        return $response;
     }
 }

@@ -7,10 +7,6 @@ use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
 
 /**
- * AddLoadersPass.
- *
- * @package ExposeTranslationBundle
- * @subpackage DependencyInjection
  * @author William DURAND <william.durand1@gmail.com>
  */
 class AddLoadersPass implements CompilerPassInterface
@@ -26,17 +22,27 @@ class AddLoadersPass implements CompilerPassInterface
         $this->container = $container;
 
         foreach ($container->findTaggedServiceIds('translation.loader') as $loaderId => $attributes) {
-            $this->registerLoader($loaderId);
+            $attributes = array_shift($attributes);
+
+            $this->registerLoader($attributes['alias'], $loaderId);
+
+            if (isset($attributes['legacy-alias'])) {
+                $this->registerLoader($attributes['legacy-alias'], $loaderId);
+            }
         }
     }
 
-    protected function registerLoader($loaderId)
+    protected function registerLoader($alias, $loaderId)
     {
         $split = explode('.', $loaderId);
         $id    = end($split);
 
         $this->container
             ->getDefinition('bazinga.exposetranslation.controller')
+            ->addMethodCall('addLoader', array($alias, new Reference($loaderId)));
+
+        $this->container
+            ->getDefinition('bazinga.exposetranslation.dumper.translation_dumper')
             ->addMethodCall('addLoader', array($id, new Reference($loaderId)));
     }
 }
