@@ -1,6 +1,6 @@
 {
-  "name": "willdurand/expose-translation-bundle",
-  "description": "A pretty nice way to expose your translation messages to your JavaScript.",
+  "name": "hardchor/expose-translation-bundle",
+  "description": "Forked from willdurand/expose-translation-bundle. A pretty nice way to expose your translation messages to your JavaScript.",
   "keywords": ["translation", "javascript"],
   "type": "symfony-bundle",
   "license": "MIT",
